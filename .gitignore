@@ -4,6 +4,7 @@ __pychache__/
 
 study.db
 
+.env
 .vscode/
 *.swp
 *~
