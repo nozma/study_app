@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>勉強記録アプリ</title>
+</head>
+<body>
+    <h1>勉強記録アプリ</h1>
+
+<h2>カテゴリを追加</h2>
+<form action="/add_category" method="POST">
+    <input type="text" name="name" placeholder="カテゴリ名" required>
+    <button type="submit">追加</button>
+</form>
+
+<h2>教材を追加</h2>
+<form action="/add_material" method="POST">
+    <input type="text" name="name" placeholder="教材名" required>
+    <select name="category_id" required>
+        {% for category in categories %}
+            <option value="{{ category[0] }}">{{ category[1] }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">追加</button>
+</form>
+
+{% if ongoing_session %}
+    <h2>進行中のセッション</h2>
+    <p>
+        教材: {{ ongoing_session[1]}}<br>
+        開始時刻: {{ ongoing_session[2]|datetimeformat }}<br>
+        経過時間: <span id="elapsed-time">計算中...</span>
+    </p>
+
+    <script>
+        const startTime = new Date("{{ ongoing_session[2]|datetimeformat('iso') }}");
+        function updateElapsedTime() {
+            const now = new Date();
+            const diff = Math.floor((now - startTime) / 1000);
+            const hours = Math.floor(diff / 3600);
+            const minutes = Math.floor((diff % 3600) / 60);
+            const seconds = diff % 60;
+            document.getElementById('elapsed-time').textContent =
+                `${hours}時間${minutes}分${seconds}秒`;
+        }
+        setInterval(updateElapsedTime, 1000);
+        updateElapsedTime();
+    </script>
+    <form action="/stop_session" method="POST">
+        <button type="submit">セッションを終了</button>
+    </form>
+{% else %}
+    <form action="/start_session" method="POST">
+        <label for="material">教材を選択:</label>
+        <select name="material_id" id="material" required>
+            {% for material in materials %}
+                <option value="{{ material[0] }}">{{ material[1] }} (カテゴリ: {{ material[2] }})</option>
+            {% endfor %}
+        </select>
+        <button type="submit">勉強開始</button>
+    </form>
+{% endif %}
+
+<h2>勉強セッション一覧</h2>
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>教材名</th>
+        <th>開始時刻</th>
+        <th>終了時刻</th>
+        <th>勉強時間</th>
+        <th>操作</th>
+    </tr>
+    {% for session in sessions %}
+    <tr>
+        <td>{{ session[0] }}</td>
+        <td>{{ session[1] }}</td>
+        <td>{{ session[2] }}</td>
+        <td>{{ session[3] }}</td>
+        <td>{{ session[4] }}</td>
+        <td>
+            <form action="/edit_session/{{ session[0] }}" method="GET" style="display:inline;">
+                <button type="submit">編集</button>
+            </form>
+            <form action="/delete_session" method="POST" style="display:inline;">
+                <input type="hidden" name="session_id" value="{{ session[0] }}">
+                <button type="submit">削除</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>教材ごとの累計勉強時間</h2>
+<table border="1">
+    <tr>
+        <th>教材名</th>
+        <th>累計時間</th>
+    </tr>
+    {% for material, total in material_totals %}
+    <tr>
+        <td>{{ material }}</td>
+        <td>{{ total }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>カテゴリごとの累計勉強時間</h2>
+<table border="1">
+    <tr>
+        <th>カテゴリ名</th>
+        <th>累計時間</th>
+    </tr>
+    {% for category, total in category_totals %}
+    <tr>
+        <td>{{ category }}</td>
+        <td>{{ total }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>

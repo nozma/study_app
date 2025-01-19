@@ -1,0 +1,19 @@
+<form method="POST" action="/update_session">
+    <input type="hidden" name="session_id" value="{{ session[0] }}">
+    <label for="material_id">教材:</label>
+    <select name="material_id" id="material_id" required>
+        {% for material in materials %}
+            <option value="{{ material[0] }}" {% if material[0] == session[1] %}selected{% endif %}>
+                {{ material[1] }}
+            </option>
+        {% endfor %}
+    </select>
+    <br>
+    <label for="start_time">開始時刻:</label>
+    <input type="datetime-local" name="start_time" id="start_time" required value="{{ session[2] }}">
+    <br>
+    <label for="end_time">終了時刻:</label>
+    <input type="datetime-local" name="end_time" id="end_time" value="{{ session[3] }}">
+    <br>
+    <button type="submit">保存</button>
+</form>

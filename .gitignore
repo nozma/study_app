@@ -1,0 +1,10 @@
+__pychache__/
+*.py[cod]
+*$py.class
+
+study.db
+
+.vscode/
+*.swp
+*~
+.DS_Store
