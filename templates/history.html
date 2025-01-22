@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>勉強記録アプリ</title>
+</head>
+<body>
+<h1>セッション履歴</h1>
+<a href="/">トップページに戻る</a>
+<table border="1">
+    <thead>
+        <tr>
+            <th>日付</th>
+            <th>教材</th>
+            <th>開始時刻</th>
+            <th>終了時刻</th>
+            <th>時間</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for session in sessions %}
+        <tr>
+            <td>{{ session[0] }}</td>
+            <td>{{ session[1] }}</td>
+            <td>{{ session[2] }}</td>
+            <td>{{ session[3] }}</td>
+            <td>{{ session[4] }}</td>
+            <td>
+                <form action="/edit_session/{{ session[5] }}?next=/history" method="GET" style="display:inline;">
+                    <button type="submit">編集</button>
+                </form>
+                <form action="/delete_session" method="POST" style="display:inline;">
+                    <input type="hidden" name="session_id" value="{{ session[5] }}">
+                    <button type="submit">削除</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

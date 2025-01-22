@@ -46,24 +46,43 @@ def get_materials():
         ''')
         return cursor.fetchall()
 
-def get_sessions(session_id=None):
+def get_sessions(session_id=None, order_by=None, start_date=None):
+    """
+    セッションを取得する関数。
+    - session_id: 指定された場合、そのIDのセッションを取得
+    - order_by: ソート条件を指定（例: "start_time DESC"）
+    - start_date: 指定された日付以降のセッションを取得
+    """
     with sqlite3.connect('study.db') as conn:
         cursor = conn.cursor()
+
+        query = '''
+            SELECT sessions.id, materials.name, sessions.start_time, sessions.end_time
+            FROM sessions
+            JOIN materials ON sessions.material_id = materials.id
+        '''
+        params = []
+
+        # 特定のsession_idを取得
         if session_id:
-            cursor.execute('''
-                SELECT sessions.id, materials.name, sessions.start_time, sessions.end_time
-                FROM sessions
-                JOIN materials ON sessions.material_id = materials.id
-                WHERE sessions.id = ?
-            ''', (session_id,))
+            query += ' WHERE sessions.id = ?'
+            params.append(session_id)
+
+        # 開始日でフィルタリング
+        elif start_date:
+            query += ' WHERE sessions.start_time >= ?'
+            params.append(start_date)
+
+        # ソート条件を追加
+        if order_by:
+            query += f' ORDER BY {order_by}'
+
+        cursor.execute(query, params)
+
+        # session_idが指定された場合は1件、そうでない場合は複数件返す
+        if session_id:
             return cursor.fetchone()
-        else:
-            cursor.execute('''
-                SELECT sessions.id, materials.name, sessions.start_time, sessions.end_time
-                FROM sessions
-                JOIN materials ON sessions.material_id = materials.id
-            ''')
-            return cursor.fetchall()
+        return cursor.fetchall()
 
 def add_category(name):
     with sqlite3.connect('study.db') as conn:
@@ -107,3 +126,37 @@ def delete_session(session_id):
         cursor = conn.cursor()
         cursor.execute('DELETE FROM sessions WHERE id = ?', (session_id,))
         conn.commit()
+
+
+def get_total_study_time(material_id):
+    """
+    指定された教材の累計勉強時間を取得（分単位）
+    """
+    with sqlite3.connect("study.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT SUM(
+                (JULIANDAY(end_time) - JULIANDAY(start_time)) * 24 * 60
+            ) AS total_minutes
+            FROM sessions
+            WHERE material_id = ? AND end_time IS NOT NULL
+        ''', (material_id,))
+        result = cursor.fetchone()
+        return int(result[0]) if result[0] else 0
+
+def get_monthly_study_time(material_id):
+    """
+    指定された教材の今月の勉強時間を取得（分単位）
+    """
+    current_month_start = datetime.now().replace(day=1).isoformat()  # 今月の初日
+    with sqlite3.connect("study.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT SUM(
+                (JULIANDAY(end_time) - JULIANDAY(start_time)) * 24 * 60
+            ) AS total_minutes
+            FROM sessions
+            WHERE material_id = ? AND end_time IS NOT NULL AND start_time >= ?
+        ''', (material_id, current_month_start))
+        result = cursor.fetchone()
+        return int(result[0]) if result[0] else 0
