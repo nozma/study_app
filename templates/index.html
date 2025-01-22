@@ -63,33 +63,38 @@
 
 <h2>勉強セッション一覧</h2>
 <table border="1">
-    <tr>
-        <th>ID</th>
-        <th>教材名</th>
-        <th>開始時刻</th>
-        <th>終了時刻</th>
-        <th>勉強時間</th>
-        <th>操作</th>
-    </tr>
-    {% for session in sessions %}
-    <tr>
-        <td>{{ session[0] }}</td>
-        <td>{{ session[1] }}</td>
-        <td>{{ session[2] }}</td>
-        <td>{{ session[3] }}</td>
-        <td>{{ session[4] }}</td>
-        <td>
-            <form action="/edit_session/{{ session[0] }}" method="GET" style="display:inline;">
-                <button type="submit">編集</button>
-            </form>
-            <form action="/delete_session" method="POST" style="display:inline;">
-                <input type="hidden" name="session_id" value="{{ session[0] }}">
-                <button type="submit">削除</button>
-            </form>
-        </td>
-    </tr>
-    {% endfor %}
+    <thead>
+        <tr>
+            <th>日付</th>
+            <th>教材</th>
+            <th>開始時刻</th>
+            <th>終了時刻</th>
+            <th>時間</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for session in sessions %}
+        <tr>
+            <td>{{ session[0] }}</td>
+            <td>{{ session[1] }}</td>
+            <td>{{ session[2] }}</td>
+            <td>{{ session[3] }}</td>
+            <td>{{ session[4] }}</td>
+            <td>
+                <form action="/edit_session/{{ session[5] }}" method="GET" style="display:inline;">
+                    <button type="submit">編集</button>
+                </form>
+                <form action="/delete_session" method="POST" style="display:inline;">
+                    <input type="hidden" name="session_id" value="{{ session[5] }}">
+                    <button type="submit">削除</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
+<a href="/history">もっと古い履歴</a>
 
 <h2>教材ごとの累計勉強時間</h2>
 <table border="1">

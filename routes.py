@@ -1,6 +1,6 @@
 # routes.py
 import sqlite3  # SQLiteデータベース操作
-from datetime import datetime  # 時間計算
+from datetime import datetime, timedelta  # 時間計算
 
 from flask import render_template, request, redirect
 from database import (
@@ -13,10 +13,12 @@ from database import (
     stop_session,
     update_session,
     delete_session,
+    get_total_study_time,
+    get_monthly_study_time
 )
-from utils import format_duration, format_start_time, format_end_time
+from utils import format_duration, format_start_time, format_start_date, format_end_time
 from utils import format_datetime_for_input
-
+from discord_presence import update_status, clear_status
 
 def configure_routes(app):
     @app.route('/')
@@ -70,10 +72,21 @@ def configure_routes(app):
             cursor.execute('SELECT sessions.id, materials.name, sessions.start_time FROM sessions JOIN materials ON sessions.material_id = materials.id WHERE sessions.end_time IS NULL LIMIT 1')
             ongoing_session = cursor.fetchone()
 
+        # 昨日の日付を取得
+        yesterday = datetime.now() - timedelta(days=1)
+
+        # 昨日以降のセッションを取得（降順でソート）
+        all_sessions = get_sessions(order_by="start_time DESC")
+        recent_sessions = [
+            session for session in all_sessions
+            if datetime.fromisoformat(session[2]) >= yesterday
+        ]
+
         enriched_sessions = []
-        for session in sessions:
+        for session in recent_sessions:
             session_id, material_name, start_time, end_time = session
             formatted_start_time = format_start_time(start_time)
+            formatted_start_date = format_start_date(start_time)
             if end_time:
                 formatted_end_time = format_end_time(end_time)
                 duration = format_duration(
@@ -83,7 +96,7 @@ def configure_routes(app):
                 formatted_end_time = "未終了"
                 duration = "進行中"
 
-            enriched_sessions.append((session_id, material_name, formatted_start_time, formatted_end_time, duration))
+            enriched_sessions.append((formatted_start_date, material_name, formatted_start_time, formatted_end_time, duration, session_id))
 
         return render_template(
             'index.html',
@@ -94,6 +107,34 @@ def configure_routes(app):
             category_totals=formatted_category_totals,
             ongoing_session=ongoing_session,
         )
+
+    @app.route('/history')
+    def history():
+        # 昨日より前のセッションを取得（降順でソート）
+        yesterday = datetime.now() - timedelta(days=1)
+        all_sessions = get_sessions(order_by="start_time DESC")
+        old_sessions = [
+            session for session in all_sessions
+            if datetime.fromisoformat(session[2]) < yesterday
+        ]
+
+        enriched_sessions = []
+        for session in old_sessions:
+            session_id, material_name, start_time, end_time = session
+            formatted_start_time = format_start_time(start_time)
+            formatted_start_date = format_start_date(start_time)
+            if end_time:
+                formatted_end_time = format_end_time(end_time)
+                duration = format_duration(
+                    (datetime.fromisoformat(end_time) - datetime.fromisoformat(start_time)).total_seconds() / 60
+                )
+            else:
+                formatted_end_time = "未終了"
+                duration = "進行中"
+
+            enriched_sessions.append((formatted_start_date, material_name, formatted_start_time, formatted_end_time, duration, session_id))
+
+        return render_template('history.html', sessions=enriched_sessions)
 
     @app.route('/add_category', methods=['POST'])
     def add_category_route():
@@ -117,7 +158,24 @@ def configure_routes(app):
             ongoing_session = cursor.fetchone()
             if ongoing_session:
                 return "進行中のセッションが既に存在します。", 400
-            start_session(material_id)
+            cursor.execute("SELECT name FROM materials WHERE id = ?", (material_id,))
+            material_name = cursor.fetchone()[0]
+            cursor.execute('''
+                SELECT SUM(
+                    (JULIANDAY(end_time) - JULIANDAY(start_time)) * 24 * 60
+                ) AS total_minutes
+                FROM sessions
+                WHERE end_time IS NOT NULL AND start_time >= ?
+            ''', (datetime.now().replace(day=1).isoformat(),))
+            overall_monthly_time = cursor.fetchone()[0] or 0
+
+        # 教材ごとの累計時間と今月の時間を取得
+        material_total_time = get_total_study_time(material_id)
+        material_monthly_time = get_monthly_study_time(material_id)
+        # セッション開始
+        start_session(material_id)
+        # Discordステータスを更新
+        update_status(material_name, material_total_time, material_monthly_time, overall_monthly_time)
         return redirect('/')
 
     @app.route('/stop_session', methods=['POST'])
@@ -129,18 +187,19 @@ def configure_routes(app):
             if not ongoing_session:
                 return "進行中のセッションがありません。", 400
             stop_session()
+        clear_status()
         return redirect('/')
 
     @app.route('/edit_session/<int:session_id>')
     def edit_session(session_id):
         session = get_sessions(session_id=session_id)
         materials = get_materials()
-        session = (
-            session[0],  # ID
-            session[1],  # 教材名
-            format_datetime_for_input(session[2]),  # 開始時刻
-            format_datetime_for_input(session[3]) if session[3] else None,  # 終了時刻
-        )
+        session = {
+            "id": session[0],  # ID
+            "material": session[1],  # 教材名
+            "start_time": format_datetime_for_input(session[2]),  # 開始時刻
+            "end_time": format_datetime_for_input(session[3]) if session[3] else None,  # 終了時刻
+        }
         return render_template('edit_session.html', session=session, materials=materials)
     
     @app.route('/update_session', methods=['POST'])
@@ -150,10 +209,12 @@ def configure_routes(app):
         start_time = request.form['start_time']
         end_time = request.form['end_time'] or None  # 空の場合はNoneに設定
         update_session(session_id, material_id, start_time, end_time)
-        return redirect('/')
+        next_page = request.args.get('next') or '/'
+        return redirect(next_page)
 
     @app.route('/delete_session', methods=['POST'])
     def delete_session_route():
         session_id = request.form['session_id']
         delete_session(session_id)
-        return redirect('/')
+        next_page = request.args.get('next') or '/'
+        return redirect(next_page)
