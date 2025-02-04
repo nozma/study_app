@@ -1,0 +1,43 @@
+<nav>
+    <ul>
+        <li><a href="/study" {% if active_page == "study" %}class="active"{% endif %}>勉強</a></li>
+        <li><a href="/exercise" {% if active_page == "exercise" %}class="active"{% endif %}>運動</a></li>
+    </ul>
+
+    {% if active_page in ["study", "categories", "materials"] %}
+    <ul>
+        <li><a href="/categories" {% if active_page == "categories" %}class="active"{% endif %}>勉強カテゴリ管理</a></li>
+        <li><a href="/materials" {% if active_page == "materials" %}class="active"{% endif %}>教材管理</a></li>
+    </ul>
+    {% endif %}
+
+    {% if active_page in ["exercise", "exercise_categories", "exercises", "exercise_log"] %}
+    <ul>
+        <li><a href="/exercise_categories" {% if active_page == "exercise_categories" %}class="active"{% endif %}>運動カテゴリ管理</a></li>
+        <li><a href="/exercises" {% if active_page == "exercises" %}class="active"{% endif %}>運動メニュー管理</a></li>
+        <li><a href="/exercise_log" {% if active_page == "exercise_log" %}class="active"{% endif %}>運動の記録</a></li>
+    </ul>
+    {% endif %}
+</nav>
+
+<style>
+    nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        background: #f8f8f8;
+    }
+    nav ul li {
+        margin: 0;
+        padding: 10px 15px;
+    }
+    nav ul li a {
+        text-decoration: none;
+        color: black;
+    }
+    .active {
+        font-weight: bold;
+        color: blue;
+    }
+</style>

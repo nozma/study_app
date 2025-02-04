@@ -14,22 +14,26 @@ if not CLIENT_ID:
 rpc = Presence(CLIENT_ID)
 rpc.connect()
 
-def update_status(material_name, material_total_time, material_monthly_time, overall_monthly_time):
+def update_status(material_name, material_total_time, material_recent_time, overall_recent_time, image_key):
     """
-    Discordのステータスを更新
+    Discord のステータスを更新
     :param material_name: 教材名
     :param material_total_time: 教材ごとの累計時間（分単位）
-    :param material_monthly_time: 教材ごとの今月の時間（分単位）
-    :param overall_monthly_time: 全体の今月の時間（分単位）
+    :param material_recent_time: 教材ごとの過去30日間の勉強時間（分単位）
+    :param overall_recent_time: 全体の過去30日間の時間（分単位）
+    :param image_key: Discord Art Assets に登録された画像のアセットキー
     """
+    state_text = f"勉強中:{material_name}"
+    details_text = f"{int(material_recent_time // 60)}時間/30日 ({int(material_total_time // 60)}時間/合計)"
+
     rpc.update(
-        details=f"{material_name}",
-        state=f"累計:{int(material_total_time // 60)}時間{int(material_total_time % 60)}分(うち今月:{int(material_monthly_time // 60)}時間{int(material_monthly_time % 60)}分)",
-        large_image="image",  # Discord Developer Portalで設定したアセットキー
-        large_text=f"今月の総計:{int(overall_monthly_time // 60)}時間{int(overall_monthly_time % 60)}分",
-        start=time.time()  # セッションの開始時間
+        state=state_text,
+        details=details_text,
+        large_image=image_key if image_key else "default_image",  # 画像キーが設定されていない場合はデフォルトを使用
+        large_text=f"勉強中: {material_name}",
+        start=time.time()
     )
-    print(f"Discordステータスを更新しました: {material_name}, 累計:{int(material_total_time)}分, 今月: {int(material_monthly_time)}分, 全体今月: {int(overall_monthly_time)}分")
+    print(f"Discordステータスを更新しました:\n{state_text}\n{details_text}\n画像: {image_key}")
 
 def clear_status():
     """Discordのステータスをクリア"""

@@ -1,0 +1,23 @@
+<h1>運動メニューの編集</h1>
+
+<form action="/edit_exercise/{{ exercise[0] }}" method="POST">
+    <label for="name">運動名:</label>
+    <input type="text" name="name" value="{{ exercise[1] }}" required>
+
+    <label for="category">部位カテゴリ:</label>
+    <select name="category_id">
+        {% for category in categories %}
+        <option value="{{ category[0] }}" {% if category[0] == exercise[2] %}selected{% endif %}>{{ category[1] }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="value_type">記録方法:</label>
+    <select name="value_type">
+        <option value="reps" {% if exercise[3] == "reps" %}selected{% endif %}>回数</option>
+        <option value="minutes" {% if exercise[3] == "minutes" %}selected{% endif %}>時間（分）</option>
+    </select>
+
+    <button type="submit">更新</button>
+</form>
+
+<p><a href="/exercises">戻る</a></p>

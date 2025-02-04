@@ -1,0 +1,70 @@
+{% include 'navbar.html' %}
+<h1>教材管理</h1>
+<a href="../">戻る</a>
+<!-- 教材追加フォーム -->
+<h2>新しい教材を追加</h2>
+<form method="POST">
+    <label for="name">教材名:</label>
+    <input type="text" id="name" name="name" placeholder="教材名" required>
+    <label for="category_id">カテゴリ:</label>
+    <select id="category_id" name="category_id" required>
+        {% for category in categories %}
+        <option value="{{ category[0] }}">{{ category[1] }}</option>
+        {% endfor %}
+    </select>
+    <label for="discord_image_key">Discord画像キー:</label>
+    <input type="text" id="discord_image_key" name="discord_image_key" placeholder="アセットキー（任意）">
+    <button type="submit">追加</button>
+</form>
+
+<!-- 教材一覧 -->
+<h2>教材一覧</h2>
+<table border="1">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>名前</th>
+            <th>カテゴリ</th>
+            <th>画像キー</th>
+            <th>状態</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for material in materials %}
+        <tr>
+            <td>{{ material[0] }}</td>
+            <td>{{ material[1] }}</td>
+            <td>{{ material[4] }}</td>
+            <td>{{ material[3] }}</td>
+            <td>{{ '有効' if material[2] else '無効' }}</td>
+            <td>
+                <!-- 教材編集フォーム -->
+                <form method="POST" action="/materials/edit/{{ material[0] }}">
+                    <input type="text" name="name" value="{{ material[1] }}" required>
+                    <label for="category_{{ material[0] }}">カテゴリ:</label>
+                    <select id="category_{{ material[0] }}" name="category_id" required>
+                        {% for category in categories %}
+                        <option value="{{ category[0] }}" {% if category[1] == material[4] %}selected{% endif %}>
+                            {{ category[1] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <label for="discord_image_key_{{ material[0] }}">Discord画像キー:</label>
+                    <input type="text" id="discord_image_key_{{ material[0] }}" name="discord_image_key" value="{{ material[3] }}">
+                    <label>
+                        <input type="checkbox" name="is_active" value="1" {% if material[2] %}checked{% endif %}>
+                        有効
+                    </label>
+                    <button type="submit">編集</button>
+                </form>
+                
+                <!-- 教材削除フォーム -->
+                <form method="POST" action="/materials/delete/{{ material[0] }}">
+                    <button type="submit">削除</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

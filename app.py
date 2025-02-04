@@ -7,7 +7,10 @@ import signal
 import sys
 import os
 
+import secrets
+
 app = Flask(__name__)
+app.secret_key = secrets.token_hex(16)
 
 @app.template_filter('datetimeformat')
 def datetimeformat(value, fmt="default"):

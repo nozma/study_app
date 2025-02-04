@@ -1,0 +1,30 @@
+{% include 'navbar.html' %}  <!-- 共通ナビゲーションを読み込む -->
+
+<h1>運動の記録</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>日付</th>
+            <th>部位</th>
+            <th>メニュー</th>
+            <th>値</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{ log[0] }}</td>  <!-- 日付 -->
+            <td>{{ log[1] }}</td>  <!-- 部位 -->
+            <td>{{ log[2] }}</td>  <!-- メニュー -->
+            <td>{{ log[3] }} {{ "回" if log[4] == "reps" else "分" }}</td>  <!-- 値 -->
+            <td>
+                <a href="/edit_exercise_log/{{ log[5] }}">編集</a>  <!-- log[5] = exercise_sessions.id -->
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p><a href="/exercise">運動モードへ戻る</a></p>

@@ -1,0 +1,51 @@
+{% include 'navbar.html' %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div id="flash-messages">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+<h1>カテゴリ管理</h1>
+<a href="../">戻る</a>
+<form method="POST">
+    <input type="text" name="name" placeholder="カテゴリ名" required>
+    <button type="submit">追加</button>
+</form>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>名前</th>
+            <th>状態</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for category in categories %}
+        <tr>
+            <td>{{ category[0] }}</td>
+            <td>{{ category[1] }}</td>
+            <td>{{ '有効' if category[2] else '無効' }}</td>
+            <td>
+                <form method="POST" action="/categories/edit/{{ category[0] }}">
+                    <input type="text" name="name" value="{{ category[1] }}" required>
+                    <label>
+                        <input type="checkbox" name="is_active" value="1" {% if category[2] %}checked{% endif %}>
+                        有効
+                    </label>
+                    <button type="submit">編集</button>
+                </form>
+                <form method="POST" action="/categories/delete/{{ category[0] }}">
+                    <button type="submit">削除</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>運動カテゴリ管理</title>
+</head>
+<body>
+    {% include 'navbar.html' %}  <!-- ナビゲーションを追加 -->
+
+    <h1>運動の部位カテゴリ管理</h1>
+
+    <!-- カテゴリ追加フォーム -->
+    <form action="/add_exercise_category" method="POST">
+        <label for="name">カテゴリ名:</label>
+        <input type="text" name="name" required>
+        <button type="submit">追加</button>
+    </form>
+
+    <!-- カテゴリ一覧 -->
+    <table>
+        <thead>
+            <tr>
+                <th>カテゴリ名</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td>{{ category[1] }}</td>
+                <td>
+                    <a href="/edit_exercise_category/{{ category[0] }}">編集</a>
+                    <form action="/delete_exercise_category/{{ category[0] }}" method="POST" style="display:inline;">
+                        <button type="submit" onclick="return confirm('本当に削除しますか？')">削除</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <!-- 運動モードへ戻るリンク -->
+    <p><a href="/exercise">運動モードへ戻る</a></p>
+</body>
+</html>

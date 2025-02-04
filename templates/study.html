@@ -5,24 +5,8 @@
     <title>勉強記録アプリ</title>
 </head>
 <body>
-    <h1>勉強記録アプリ</h1>
-
-<h2>カテゴリを追加</h2>
-<form action="/add_category" method="POST">
-    <input type="text" name="name" placeholder="カテゴリ名" required>
-    <button type="submit">追加</button>
-</form>
-
-<h2>教材を追加</h2>
-<form action="/add_material" method="POST">
-    <input type="text" name="name" placeholder="教材名" required>
-    <select name="category_id" required>
-        {% for category in categories %}
-            <option value="{{ category[0] }}">{{ category[1] }}</option>
-        {% endfor %}
-    </select>
-    <button type="submit">追加</button>
-</form>
+    {% include 'navbar.html' %}
+    <h1>勉強記録</h1>
 
 {% if ongoing_session %}
     <h2>進行中のセッション</h2>
