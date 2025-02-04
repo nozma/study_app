@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>運動モード</title>
+</head>
+<body>
+    {% include 'navbar.html' %}  <!-- 共通ナビゲーションを読み込む -->
+    <h1>運動モード</h1>
+
+    <!-- 運動の記録フォーム -->
+    <form action="/log_exercise" method="POST">
+        <label for="exercise">運動メニュー:</label>
+        <select name="exercise_id" id="exercise" required onchange="updateValueType()">
+            {% for exercise in exercises %}
+            <option value="{{ exercise[0] }}" data-value-type="{{ exercise[3] }}">{{ exercise[1] }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="value">値:</label>
+        <input type="number" name="value" id="value" required min="1">
+        <input type="hidden" name="value_type" id="value_type">
+
+        <span id="value_type_label"></span>  <!-- 「回」または「分」を表示 -->
+
+        <button type="submit">記録</button>
+    </form>
+
+    <script>
+        function updateValueType() {
+            let select = document.getElementById("exercise");
+            let selectedOption = select.options[select.selectedIndex];
+            let valueType = selectedOption.getAttribute("data-value-type");
+
+            let label = document.getElementById("value_type_label");
+            if (valueType === "reps") {
+                label.textContent = "回";
+            } else if (valueType === "minutes") {
+                label.textContent = "分";
+            } else {
+                label.textContent = "";
+            }
+            document.getElementById("value_type").value = valueType;
+        }
+        window.onload = updateValueType;
+    </script>
+
+    <!-- 直近7日間の運動記録 -->
+    <h2>直近7日間の記録</h2>
+
+    {% if recent_logs %}
+    <table>
+        <thead>
+            <tr>
+                <th>日付</th>
+                <th>部位</th>
+                <th>メニュー</th>
+                <th>値</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in recent_logs %}
+            <tr>
+                <td>{{ log[0] }}</td>  <!-- 日付 -->
+                <td>{{ log[1] }}</td>  <!-- 部位 -->
+                <td>{{ log[2] }}</td>  <!-- メニュー -->
+                <td>{{ log[3] }} {{ "回" if log[4] == "reps" else "分" }}</td>  <!-- 値 -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>直近7日間の記録はありません。</p>
+    {% endif %}
+
+    <p><a href="/exercise_log">すべての記録を見る</a></p>
+</html>

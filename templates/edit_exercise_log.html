@@ -1,0 +1,33 @@
+<h1>運動の記録を編集</h1>
+
+<!-- フラッシュメッセージの表示 -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<ul class="flash-messages">
+    {% for category, message in messages %}
+    <li class="{{ category }}">{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
+
+<form action="/edit_exercise_log/{{ log[0] }}" method="POST">
+    <label for="record_date">記録日:</label>
+    <input type="date" name="record_date" value="{{ log[1] }}" required>  <!-- 記録日を YYYY-MM-DD 形式で表示 -->
+
+    <label for="exercise_id">運動メニュー:</label>
+    <select name="exercise_id">
+        {% for exercise in exercises %}
+        <option value="{{ exercise[0] }}" {% if exercise[0] == log[2] %}selected{% endif %}>
+            {{ exercise[1] }} ({{ exercise[2] }})  <!-- 運動名 (カテゴリ名) -->
+        </option>
+        {% endfor %}
+    </select>
+
+    <label for="value">値:</label>
+    <input type="number" name="value" value="{{ log[3] }}" required min="1">  <!-- 値をデフォルトでセット -->
+
+    <button type="submit">更新</button>
+</form>
+
+<p><a href="/exercise_log">戻る</a></p>

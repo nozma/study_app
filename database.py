@@ -1,6 +1,6 @@
 # database.py
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def init_db():
     with sqlite3.connect('study.db') as conn:
@@ -160,3 +160,52 @@ def get_monthly_study_time(material_id):
         ''', (material_id, current_month_start))
         result = cursor.fetchone()
         return int(result[0]) if result[0] else 0
+
+def get_past_days_study_time(material_id, days=30):
+    """
+    指定された教材の過去N日間の勉強時間を取得（分単位）
+    :param material_id: 教材のID
+    :param days: 何日間の勉強時間を取得するか（デフォルト: 30日）
+    :return: 指定期間内の合計勉強時間（分単位）
+    """
+    past_days_start = (datetime.now() - timedelta(days=days)).isoformat()  # N日前の日時を取得
+    with sqlite3.connect("study.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT SUM(
+                (JULIANDAY(end_time) - JULIANDAY(start_time)) * 24 * 60
+            ) AS total_minutes
+            FROM sessions
+            WHERE material_id = ? AND end_time IS NOT NULL AND start_time >= ?
+        ''', (material_id, past_days_start))
+        result = cursor.fetchone()
+        return int(result[0]) if result[0] else 0
+
+def get_overall_past_days_study_time(days=30):
+    """
+    すべての教材の過去N日間の勉強時間を取得（分単位）
+    :param days: 何日間の勉強時間を取得するか（デフォルト: 30日）
+    :return: 指定期間内の合計勉強時間（分単位）
+    """
+    past_days_start = (datetime.now() - timedelta(days=days)).isoformat()  # N日前の日時を取得
+    with sqlite3.connect("study.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT SUM(
+                (JULIANDAY(end_time) - JULIANDAY(start_time)) * 24 * 60
+            ) AS total_minutes
+            FROM sessions
+            WHERE end_time IS NOT NULL AND start_time >= ?
+        ''', (past_days_start, ))
+        result = cursor.fetchone()
+        return int(result[0]) if result[0] else 0
+
+def get_material_image_key(material_id):
+    """
+    指定された教材のDiscord用画像キーを取得
+    """
+    with sqlite3.connect("study.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT discord_image_key FROM materials WHERE id = ?", (material_id,))
+        result = cursor.fetchone()
+        return result[0] if result and result[0] else ""

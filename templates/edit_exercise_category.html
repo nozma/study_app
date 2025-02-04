@@ -1,0 +1,9 @@
+<h1>カテゴリの編集</h1>
+
+<form action="/edit_exercise_category/{{ category[0] }}" method="POST">
+    <label for="name">カテゴリ名:</label>
+    <input type="text" name="name" value="{{ category[1] }}" required>
+    <button type="submit">更新</button>
+</form>
+
+<p><a href="/exercise_categories">戻る</a></p>

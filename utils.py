@@ -8,9 +8,9 @@ def format_duration(minutes):
     return f"{hours}時間{mins}分"
 
 def format_start_time(start_time):
-    """開始時刻を yyyy年mm月dd日 hh時mm分 の形式にフォーマット"""
+    """開始時刻を hh時mm分 の形式にフォーマット"""
     start = datetime.fromisoformat(start_time)
-    return start.strftime("%Y年%m月%d日 %H時%M分")
+    return start.strftime("%H時%M分")
 
 def format_start_date(start_time):
     """開始時刻を yyyy年mm月dd日 の形式にフォーマット"""
